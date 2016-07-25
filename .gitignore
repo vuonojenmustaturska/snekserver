@@ -21,6 +21,5 @@ bootstrap/cache/
 Homestead.yaml
 Homestead.json
 .env
-config/database.php
 bootstrap/cache/
 >>>>>>> 3cb2d09... Initial commit from server
