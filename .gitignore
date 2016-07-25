@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 vendor/
 node_modules/
 
@@ -13,3 +14,13 @@ bootstrap/cache/
 config/database.php
 # Rocketeer PHP task runner and deployment package. https://github.com/rocketeers/rocketeer
 .rocketeer/
+=======
+/vendor
+/node_modules
+/public/storage
+Homestead.yaml
+Homestead.json
+.env
+config/database.php
+bootstrap/cache/
+>>>>>>> 3cb2d09... Initial commit from server
