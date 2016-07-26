@@ -6,6 +6,7 @@ use Snek\Jobs\Job;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Contracts\Queue\ShouldQueue;
+use Illuminate\Foundation\Bus\DispatchesJobs;
 
 use Snek\Game;
 
@@ -47,8 +48,8 @@ class StopGame extends Job implements ShouldQueue
 
         if ($this->cleanup === true)
         {
-            Game::destroy($id);
-            
+            Game::destroy($this->game->id);
+
             $this->dispatch(new CleanupGame($this->game));
         }
     }
