@@ -304,9 +304,9 @@ class GamesController extends Controller
         
         if (Auth::id() == $game->user_id)
         {
-            Game::destroy($id);
+            $this->dispatch(new StopGame($game, true));
 
-            Session::flash('flash_message', 'Game deleted!');
+            Session::flash('flash_message', 'Game queued for deletion!');
         }
         else
         {
