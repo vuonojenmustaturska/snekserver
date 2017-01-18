@@ -34,13 +34,19 @@ class ServerState
         $this->socket = socket_create(AF_INET, SOCK_STREAM, SOL_TCP);
 
         if ($this->socket === false) {
-            trigger_error("socket_create() failed: reason: " . socket_strerror(socket_last_error()));
+            throw new Exception("socket_create() failed: reason: " . socket_strerror(socket_last_error()));
         }
 
-        $result = socket_connect($this->socket, $this->address, $this->port);
+        try 
+        {
+            $result = socket_connect($this->socket, $this->address, $this->port);
+        }
+        catch (Exception $e)
+        {
+        }
         
         if ($result === false) {
-            trigger_error("socket_connect() failed.\nReason: ($result) " . socket_strerror(socket_last_error($this->socket)) . "\n");
+            throw new Exception("socket_connect() failed.\nReason: ($result) " . socket_strerror(socket_last_error($this->socket)) . "\n");
         } 
     }
 
@@ -67,7 +73,7 @@ class ServerState
 
         $data = substr($data, 6+strlen($arr['Name']));
 
-        $arr2 = unpack('CEra/C5/VTTH/C2Junk/C200NationStatus/C200Submitted/C200Connected/VTurn/CClientCanStart', $data);
+        $arr2 = unpack('CEra/C5/VTTH/C2Junk/C250NationStatus/C250Submitted/C250Connected/VTurn/CClientCanStart', $data);
         //var_dump($arr2['Junk3']);
         $this->era = $arr2['Era'];
         $this->status = $arr['Message6'];

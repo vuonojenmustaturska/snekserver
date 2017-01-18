@@ -150,15 +150,16 @@
                 <table class="table table-bordered table-striped table-hover">
                     <thead>
                         <tr>
+                            <th>#</th>
                             <th>Name</th>
                             <th>Version</th>
                             <th>Description</th>
                         </tr>
                     </thead>
                     <tbody>
-                        @foreach($game->mods as $mod)
+                        @foreach($game->orderedMods() as $mod)
                         <tr>
-                            <td>{{ $mod->name }}</td><td>{{ $mod->version }}</td><td>{{ $mod->description }}</td>
+                            <td>{{ $mod->pivot->load_order }}</td><td>{{ $mod->name }}</td><td>{{ $mod->version }}</td><td>{{ $mod->description }}</td>
                         </tr>
                         @endforeach
                     </tbody>

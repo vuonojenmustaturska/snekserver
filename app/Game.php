@@ -79,7 +79,12 @@ class Game extends Model
      */
     public function mods()
     {
-        return $this->belongsToMany('Snek\Mod');
+        return $this->belongsToMany('Snek\Mod')->withPivot('load_order');
+    }
+
+    public function orderedMods()
+    {
+        return $this->mods()->orderBy('game_mod.load_order', 'asc')->get();
     }
 
     /**
@@ -188,7 +193,7 @@ class Game extends Model
 
         if (count($this->mods) > 0)
         {
-            foreach ($this->mods as $mod)
+            foreach ($this->orderedMods() as $mod)
             {
                 $cmdline[] = '-M '.escapeshellarg($mod->filename);
             }
@@ -225,8 +230,15 @@ class Game extends Model
             '--era '.$this->era,
             '--uploadtime 1',
             '--noclientstart',
+            '--preexec '.escapeshellarg('php /home/snek/snek/artisan games:parsestats '.$this->id),
+            '--statfile',
+            '--scoredump',
+            '--statuspage /home/snek/dominions4/savedgames/'.$this->shortname.'/status.html',
             '--mapfile '.escapeshellarg($this->map->filename),
              ];
+
+	if (!empty($this->masterpw))
+	    $cmdline[] = '--masterpass '.escapeshellarg($this->masterpw);
 
         if ($this->hours > 0)
             $cmdline[] = '--hours '.$this->hours;
@@ -247,7 +259,14 @@ class Game extends Model
             '--port '.(50000+$this->id),
             '--era '.$this->era,
             '--mapfile '.escapeshellarg($this->map->filename),
+            '--preexec '.escapeshellarg('php /home/snek/snek/artisan games:parsestats '.$this->id),
+            '--statfile',
+            '--scoredump',
+            '--statuspage /home/snek/dominions4/savedgames/'.$this->shortname.'/status.html'
             ];
+
+	if (!empty($this->masterpw))
+	    $cmdline[] = '--masterpass '.escapeshellarg($this->masterpw);
 
         if ($this->hours > 0)
             $cmdline[] = '--hours '.$this->hours;
@@ -268,7 +287,14 @@ class Game extends Model
             '--port '.(50000+$this->id),
             '--noclientstart',
             '--mapfile '.escapeshellarg($this->map->filename),
+            '--preexec '.escapeshellarg('php /home/snek/snek/artisan games:parsestats '.$this->id),
+            '--statfile',
+            '--scoredump',
+            '--statuspage /home/snek/dominions4/savedgames/'.$this->shortname.'/status.html'
             ];
+
+	if (!empty($this->masterpw))
+	    $cmdline[] = '--masterpass '.escapeshellarg($this->masterpw);
 
         $cmdline = array_merge($cmdline, $this->getOptions());
 

@@ -7,9 +7,9 @@
     <div class="row">
         <div class="col-md-12">
             <div class="list-group">
-                @foreach ($state->nations as $nationid => $nationdata)
+                @foreach ($signupsById as $nationid => $user)
                 @if ($nationid > 4)
-                  <a href="#" class="list-group-item col-md-4 {{ trans('serverstate.submitted_'.$nationdata['submitted'].'_class') }}" style="border-radius: 4px;">
+                  <a href="#" class="list-group-item col-md-4 {{ trans('serverstate.submitted_class') }}" style="border-radius: 4px;">
                     @if (!empty($nations[$nationid]['flag']))
                      <img src="{{ asset('assets/mods/'.$nations[$nationid]['flag'].'.png') }}" class="pull-left" />
                      @else
@@ -18,7 +18,7 @@
                     <h4 class="list-group-item-heading">{{ $signupsById[$nationid]->name or '???' }}</h4>
                     <p class="list-group-item-text"><small>{{ $nationid }}: {{ $nations[$nationid]['name'] }} - {{ trans('games.era_'.$nations[$nationid]['era']) }}</small></p>
                     <p class="list-group-item-text"><small>{{ $nations[$nationid]['epithet'] }}</small></p>
-                    <p class="list-group-item-text"><small>{{ trans('serverstate.nationstatus_'.$nationdata['status']) }}&nbsp;{{ trans('serverstate.submitted_'.$nationdata['submitted']) }}&nbsp;{{ trans('serverstate.connected_'.$nationdata['connected']) }}</small></p>
+                    {{-- <p class="list-group-item-text"><small>{{ trans('serverstate.nationstatus_'.$nationdata['status']) }}&nbsp;{{ trans('serverstate.submitted_'.$nationdata['submitted']) }}&nbsp;{{ trans('serverstate.connected_'.$nationdata['connected']) }}</small></p> --}}
                   </a>
                 @endif
                 @endforeach
@@ -28,7 +28,6 @@
     <br />
     <div class="row">
     	<div class="col-md-12">
-    	 @if (Auth::check())
     		    <button type="button" class="btn btn-primary btn-lg" data-toggle="modal" data-target="#signupmodal">
                       Sign up
                     </button>
@@ -42,7 +41,7 @@
                     <h4 class="modal-title" id="signuplabel">Sign up</h4>
                   </div>
                   <div class="modal-body">
-                  {!! Form::open(['url' => '/games', 'class' => 'form-horizontal']) !!}
+                  {!! Form::open(['url' => ['lobbies', $lobby->id, 'signup'], 'class' => 'form-horizontal']) !!}
                   		<div class="form-group">
 			                {!! Form::label('password', trans('lobbies.password'), ['class' => 'col-sm-3 control-label']) !!}
 			                <div class="col-sm-6">
@@ -57,7 +56,7 @@
 		            	</div>
 			            <select id="nation-image-picker" class="image-picker show-labels show-html" name="nation">
                         @foreach(Snek\Nation::where('implemented_by', null)->get() as $nation)
-                                <option data-nation-epithet="{{ $nation->epithet }}" data-img-src="http://placekitten.com/64/64" value="{{ $nation->nation_id }}">{{ $nation->name }}</option>
+                                <option data-nation-epithet="{{ $nation->epithet }}" data-img-src="https://placekitten.com/64/64" value="{{ $nation->nation_id }}">{{ $nation->name }}</option>
                         @endforeach
                     </select>
                   </div>
@@ -68,7 +67,7 @@
                 </div>
               </div>
             </div>
-        @endif
+
     	</div>
     </div>
     <br />
@@ -126,7 +125,7 @@ function populatenations(id)
 			}
 		    else
 		    {
-		    	$select.append('<option data-nation-epithet='+ nation.epithet +' data-img-src="http://placekitten.com/64/64" value=' + nation.nation_id + '>' + nation.name + '</option>');
+		    	$select.append('<option data-nation-epithet='+ nation.epithet +' data-img-src="https://placekitten.com/64/64" value=' + nation.nation_id + '>' + nation.name + '</option>');
 		    }
 		});
 		$('#nation-image-picker').imagepicker({show_label: true});

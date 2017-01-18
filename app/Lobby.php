@@ -35,4 +35,10 @@ class Lobby extends Model
     {
         return $this->hasMany('Snek\Signup', 'lobby_id');
     }
+
+
+    public function game()
+    {
+        return $this->belongsTo('Snek\Game');
+    }
 }

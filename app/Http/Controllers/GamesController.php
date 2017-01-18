@@ -14,10 +14,12 @@ use Auth;
 use Snek\ServerState;
 use Storage;
 use Snek\Nation;
+use Snek\GameStat;
 
 use Snek\Jobs\CreateNewGame;
 use Snek\Jobs\StartGame;
 use Snek\Jobs\RestartGame;
+use Snek\Jobs\StopGame;
 
 class GamesController extends Controller
 {
@@ -118,9 +120,25 @@ class GamesController extends Controller
 
             $game = Game::create($request->all());
 
-            Log::info(print_r($request->input('mods'),true));
+            //Log::info(print_r($request->input('mods'),true));
 
-            $game->mods()->attach($request->input('mods'));
+            if ($request->input('mods'))
+                {
+                    $sync_data = [];
+
+                    for($i = 0; $i < count($request->input('mods')); $i++)
+                        $sync_data[$request->input('mods')[$i]] = ['load_order' => $request->input('load-order-'.$request->input('mods')[$i])];
+
+                    //Log::info(print_r($sync_data, true));
+                    /*foreach ($request->input('mods') as $mod)
+                    {
+                        Log::info($mod.': '.$request->input('load-order-'.$mod));
+                    }*/
+                    
+                    $game->mods()->sync($sync_data);
+            }
+
+            //$game->mods()->attach($request->input('mods'));
 
             Session::flash('flash_message', 'Game added!');
 
@@ -143,7 +161,89 @@ class GamesController extends Controller
     {
         $game = Game::findOrFail($id);
 
+        if ($game->id == 129)
+        {
+            $foo = '';
+            foreach($game->mods as $mod)
+            {
+                $foo .= $mod->id.': '.$mod->pivot->load_order.', ';
+            }
+            Log::info($foo);
+        }
+
         return view('games.show', compact('game'));
+    }
+
+    public function stats($id)
+    {
+        $game = Game::findOrFail($id);
+
+        $stats = GameStat::where('game_id', '=', $game->id)->orderBy('turn')->get();
+
+        $chartdata = [];
+        $trackedstats = ['dominion', 'armysize', 'research', 'income', 'gemincome', 'victorypoints', 'provinces', 'forts'];
+
+        $labels = [];
+        $data = [];
+        $nationturns = [];
+        $turn = -1;
+
+        $turns = [];
+
+        foreach ($trackedstats as $sstat)
+            $chartdata[$sstat] = [];
+
+        foreach ($stats as $stat)
+        {
+
+            if ($turn != $stat->turn)
+            {
+                if (!empty($data))
+                {
+                    foreach ($trackedstats as $sstat)
+                    {
+                        $data[$sstat]['turn'] = $turn;
+                        $chartdata[$sstat][] = $data[$sstat];
+                    }
+                }
+
+               // Log::info('turn changed from '.$turn.' to '.$stat->turn);
+                
+                $turn = $stat->turn;
+
+                foreach ($trackedstats as $sstat) 
+                    $data[$sstat] = [];
+            }
+
+            
+
+            if (!array_key_exists($stat->nation_id, $labels))
+                $labels[$stat->nation_id] = Nation::findOrFail($stat->nation_id)->name;
+
+            $turns[$turn][$labels[$stat->nation_id]] = $stat->turn_status;
+            $nationturns[$labels[$stat->nation_id]][$turn] = $stat->turn_status;
+
+            foreach ($trackedstats as $sstat)
+                $data[$sstat][$stat->nation_id] = $stat->$sstat;
+
+
+        }
+
+        Log::info(print_r($chartdata,true));
+
+        foreach ($labels as $number => $label)
+        {
+            $chartdata['ykeys'][] = $number;
+            $chartdata['labels'][] = $label;
+        }
+
+        foreach ($trackedstats as $sstat)
+                $chartdata[$sstat] = json_encode($chartdata[$sstat]);
+        
+        $chartdata['ykeys'] = json_encode($chartdata['ykeys']);
+        $chartdata['labels'] = json_encode($chartdata['labels']);
+
+        return view('games.stats', compact('game', 'chartdata', 'trackedstats', 'turns', 'nationturns'));
     }
 
     /**
@@ -252,7 +352,9 @@ class GamesController extends Controller
 
         if (Auth::id() == $game->user_id)
         {
-            return view('games.edit', compact('game'));
+            $mapname = $game->map->name;
+            $asdf = 1;
+            return view('games.edit', compact('game', 'mapname', 'asdf'));
         }
         else
         {
@@ -273,8 +375,24 @@ class GamesController extends Controller
     {
         $this->validate($request,
         [
+            'era' => 'required|min:1|max:3',
+            'magicsites' => 'numeric|min:0|max:75',
+            'eventrarity' => 'numeric|min:1|max:2',
+            'research' => 'numeric|min:-1|max:3',
+            'richness' => 'numeric|min:50|max:300',
+            'supplies' => 'numeric|min:50|max:300',
+            'resources' => 'numeric|min:50|max:300',
+            'masterpw' => 'min:4|max:255',
+            'victorycond' => 'numeric|min:0|max:2',
+            'teamgame' => 'numeric|min:0|max:1',
+            'lvl1thrones' => 'required_unless:victorycond,0|numeric|min:0|max:10',
+            'lvl2thrones' => 'required_unless:victorycond,0|numeric|min:0|max:10',
+            'lvl3thrones' => 'required_unless:victorycond,0|numeric|min:0|max:10',
+            'totalvp' => 'numeric|min:0|max:25',
             'hours' => 'numeric',
             'masterpw' => 'min:4|max:255',
+            'map_id' => 'numeric|exists:maps,id',
+            'mods' => ['array','exists:mods,id'],
         ]);
 
         $game = Game::findOrFail($id);
@@ -282,13 +400,41 @@ class GamesController extends Controller
         if (Auth::id() == $game->user_id)
         {
 
-            $game->update($request->only('masterpw', 'hours'));
+            if ($game->state > 0)
+            {
+                $game->update($request->only('masterpw', 'hours', 'map_id'));
+            }
+            else
+            {
+                $game->update($request->except('id', 'name', 'shortname'));
+                if ($request->input('mods'))
+                {
+                    $game->mods()->detach();
+
+                    $sync_data = [];
+
+                    for($i = 0; $i < count($request->input('mods')); $i++)
+                        $sync_data[$request->input('mods')[$i]] = ['load_order' => $request->input('load-order-'.$request->input('mods')[$i])];
+
+                    Log::info(print_r($sync_data, true));
+                    /*foreach ($request->input('mods') as $mod)
+                    {
+                        Log::info($mod.': '.$request->input('load-order-'.$mod));
+                    }*/
+                    
+                    $game->mods()->sync($sync_data);
+                }
+            }
+            
+
+
+
 
             Session::flash('flash_message', 'Game updated!');
 
         }
 
-        return redirect('games');
+        return redirect()->route('games.show', ['games' => $game->id]);
     }
 
     /**

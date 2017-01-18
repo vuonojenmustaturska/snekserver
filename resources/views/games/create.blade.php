@@ -49,6 +49,9 @@
             <div class="form-group {{ $errors->has('mods') ? 'has-error' : ''}}">
                 {!! Form::label('mods', trans('games.mods'), ['class' => 'col-sm-3 control-label']) !!}
                 <div class="col-sm-6">
+                    <small>Drag mods to change the load order</small>
+                    <div id="modslist" class="list-group">
+                    </div>
                     <button type="button" class="btn btn-primary btn-lg" data-toggle="modal" data-target="#modspicker">
                       Mod picker
                     </button>
@@ -239,7 +242,7 @@
                     <select id="mod-image-picker" class="image-picker show-labels show-html" name="mods[]" multiple="multiple">
                         @foreach(Snek\Mod::all() as $mod)
                             @if(file_exists('/home/snek/snek/public/img/mods/'.$mod->id.'.png'))
-                                <option data-map-description="{{ $mod->description }}" data-img-src="{{ asset('/img/mods/'.$mod->id.'.png') }}" value="{{ $mod->id }}">{{ $mod->name }}</option>
+                                <option data-map-description="{{ $mod->description }}"  data-img-src="{{ asset('/img/mods/'.$mod->id.'.png') }}" value="{{ $mod->id }}">{{ $mod->name }}</option>
                             @else
                                 <option data-map-description="{{ $mod->description }}" data-img-src="http://placekitten.com/140/140" value="{{ $mod->id }}">{{ $mod->name }}</option>
                             @endif
@@ -265,9 +268,9 @@
                     <select id="map-image-picker" class="image-picker show-labels" name="map_id">
                         @foreach(Snek\Map::all() as $map)
                             @if(file_exists('/home/snek/snek/public/img/maps/'.$map->id.'.png'))
-                                <option data-map-description="{{ $map->description }}" data-img-src="{{ asset('/img/maps/'.$map->id.'.png') }}" value="{{ $map->id }}">{{ $map->name }}</option>
+                                <option data-map-description="{{ $map->description }}" data-img-label="{{ $map->name }}<br /><small>{{ $map->filename }}</small>" data-img-src="{{ asset('/img/maps/'.$map->id.'.png') }}" value="{{ $map->id }}">{{ $map->name }}</option>
                             @else
-                                <option data-map-description="{{ $map->description }}" data-img-src="http://placekitten.com/140/140" value="{{ $map->id }}">{{ $map->name }}</option>
+                                <option data-map-description="{{ $map->description }}" data-img-label="{{ $map->name }}<br /><small>{{ $map->filename }}</small>" data-img-src="http://placekitten.com/140/140" value="{{ $map->id }}">{{ $map->name }}</option>
                             @endif
                         @endforeach
                     </select>
@@ -302,9 +305,37 @@
             <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-slider/7.0.2/css/bootstrap-slider.min.css">
             <script src="{{ asset('/js/image-picker.min.js') }}"></script>
             <link rel="stylesheet" href="{{ asset('/css/image-picker.css') }}">
+            <script src="{{ asset('/js/Sortable.min.js') }}"></script>
             <script>
                 $(document).ready(function() {
-                    $('#mod-image-picker').imagepicker({show_label: true});
+                    Sortable.create(modslist, { 
+                            onEnd: function (evt) {
+                                $.each($('#modslist').children(), function(i, val)
+                                {
+                                    $(val).children('span').text(i+1);
+                                    $(val).children('input').val(i+1);
+                                });
+                                 // element's old index within parent
+                                  // element's new index within parent
+                            }
+                     });
+                    $('#mod-image-picker').imagepicker({show_label: true,
+                        clicked: function(select) {
+                            if (select.option.prop('selected'))
+                            {
+                                $('#modslist').append('<div class="list-group-item" data-id='+select.option.val()+'><input type="hidden" name="load-order-'+ select.option.val() +'" value="0" /><span class="badge"></span><img src="https://snek.earth/img/mods/'+ select.option.val() +'-xs.png" />&nbsp;'+ select.option.text() +'</div>');
+                            }
+                            else
+                            {
+                                $('#modslist').children('*[data-id="'+select.option.val()+'"]').remove();
+                            }
+                            
+                            $.each($('#modslist').children(), function(i, val)
+                                {
+                                    $(val).children('span').text(i+1);
+                                    $(val).children('input').val(i+1);
+                                });
+                        }});
                     $('#map-image-picker').imagepicker({
                         show_label: true,
                         selected: function() {

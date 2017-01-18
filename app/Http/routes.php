@@ -20,8 +20,9 @@ Route::auth();
 Route::get('/home', 'HomeController@index');
 
 Route::get('games/{game}/status', 'GamesController@server_status')->where('game', '[0-9]+');
+Route::get('games/{game}/stats', 'GamesController@stats')->where('game', '[0-9]+');
 Route::get('lobbies/{lobby}', 'LobbiesController@show')->where('lobby', '[0-9]+');
-Route::get('assets/mods/{asset}', 'ModsController@getModAsset')->where('asset', '[-_0-9a-zA-Z\.\/]+');
+Route::get('assets/mods/{asset}', 'ModsController@getModAsset')->where('asset', '[\s-_0-9a-zA-Z\.\/]+');
 
 Route::group(['middleware' => 'admin'], function() {
 	Route::resource('admin/users', 'UsersController');

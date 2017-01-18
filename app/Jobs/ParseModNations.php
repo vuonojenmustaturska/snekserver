@@ -54,14 +54,14 @@ class ParseModNations extends Job implements ShouldQueue
             {
                 $nation = [];
 
-                preg_match('/#name\\s+?"(.*)"/', $match[2], $nationmatch);
+                preg_match('/#name\s+?"(.*)"/', $match[2], $nationmatch);
 
                 if (isset($nationmatch[1]) && strlen($nationmatch[1]) > 0)
                 {
                     $nation['name'] = $nationmatch[1];
                 }
 
-                preg_match('/#era[\s]+?(\d)/', $match[2], $nationmatch);
+                preg_match('/#era\s+?(\d)/', $match[2], $nationmatch);
 
                 if (isset($nationmatch[1]) && strlen($nationmatch[1]) > 0)
                 {
@@ -79,7 +79,7 @@ class ParseModNations extends Job implements ShouldQueue
                 }
 
 
-                preg_match('/#epithet\\s"(.+?)"/s', $match[2], $nationmatch);
+                preg_match('/#epithet\s+?"(.+?)"/s', $match[2], $nationmatch);
 
                 if (isset($nationmatch[1]) && strlen($nationmatch[1]) > 0)
                 {
@@ -107,8 +107,12 @@ class ParseModNations extends Job implements ShouldQueue
         }
 
 
+
         foreach ($nations as $nationid => $nationdata)
         {
+            foreach ($nationdata as &$text)
+                $text = utf8_encode($text);
+            
             $nation = Nation::firstOrNew(['nation_id' => $nationid, 'implemented_by' => $nationdata['implemented_by']]);
             $nation->update($nationdata);
             $nation->save();

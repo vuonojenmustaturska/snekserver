@@ -15,6 +15,9 @@ class Kernel extends ConsoleKernel
     protected $commands = [
         // Commands\Inspire::class,
         Commands\SnekStatus::class,
+        Commands\ParseGameStats::class,
+        Commands\CheckMapThumbnails::class,
+        Commands\CheckModThumbnails::class,
     ];
 
     /**

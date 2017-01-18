@@ -89,7 +89,7 @@ class LobbiesController extends Controller
     public function json_nations($id)
     {
         if ($id == 0)
-            return response()->json( DB::table('nations')->select('nation_id','name','epithet','flag')->where('implemented_by','=',null)->get() );
+            return response()->json( DB::table('nations')->select('nation_id','name','description','epithet','flag')->where('implemented_by','=',null)->get() );
         elseif (is_numeric($id))
             return response()->json( DB::table('nations')->select('nation_id','name','description','epithet','flag')->where('implemented_by','=',$id)->where('era', '!=', 0)->get() );
         else
@@ -122,22 +122,32 @@ class LobbiesController extends Controller
             
         }
 
+        
+        /*
+        try 
+        {
+            $state = new ServerState($lobby->server_address, $lobby->server_port);
+            $state->fetch();
+            $state->getMods();
 
-        $state = new ServerState($lobby->server_address, $lobby->server_port);
-        $state->fetch();
-        $state->getMods();
 
+            $mods = [];
 
+            foreach ($state->mods as $mod)
+                $mods[] = $mod['Name'];
+
+            
+        }
+        catch (ErrorException $e)
+        {
+            $mods = [];
+        }
+        */
         $mods = [];
-
-        foreach ($state->mods as $mod)
-            $mods[] = $mod['Name'];
-
         $nations = Nation::getNationsByModsNames($mods);
 
 
-
-        return view('lobbies.show', compact('lobby','state', 'nations', 'signupsById'));
+        return view('lobbies.show', compact('lobby', 'nations', 'signupsById'));
     }
 
     /**

@@ -53,4 +53,6 @@ class SnekStatus extends Command
             $game->save();
         }
     }
+
+
 }

@@ -170,7 +170,7 @@ class ModsController extends Controller
     {
         $asset = preg_replace('/[\.]+?/', '.', $asset);
 
-        //Log::info($asset);
+        Log::info($asset);
 
         if (Storage::exists('mods/'.$asset))
         {
@@ -182,11 +182,13 @@ class ModsController extends Controller
             //Log::info($rawasset);
             if (!empty($asset) && file_exists('/home/snek/dominions4/mods/'.$rawasset))
             {
+                //Log::info($rawasset);
                 $image = new Imagick();        
                 $image->readImage('/home/snek/dominions4/mods/'.$rawasset);
                 $image->setImageFormat('png');
                 $transparent = new ImagickPixel('#00000000');
                 $image->opaquePaintImage($image->getImagePixelColor(0, 0), $transparent, 0, 0, Imagick::CHANNEL_ALL);
+                //Log::info($asset);
                 Storage::put('mods/'.$asset, $image->getImageBlob());
             }
         }

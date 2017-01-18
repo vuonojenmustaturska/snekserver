@@ -62,6 +62,9 @@ class CreateThumbnail extends Job implements ShouldQueue
                 $image->readImage('/home/snek/dominions4/mods/'.$mod->icon);
                 $image->thumbnailImage(140, 140,true,true);
                 $image->writeImage ('/home/snek/snek/public/img/mods/'.$mod->id.'.png');
+                $image->readImage('/home/snek/dominions4/mods/'.$mod->icon);
+                $image->thumbnailImage(128, 32,true,true);
+                $image->writeImage ('/home/snek/snek/public/img/mods/'.$mod->id.'-xs.png');
             }
         }
     }
